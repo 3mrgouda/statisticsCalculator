@@ -1,90 +1,69 @@
-const inputNumbers = document.getElementById("numbers");
-const btnSubmit = document.getElementById("btnSubmit");
-const meanText = document.getElementById("mean");
-const medianText = document.getElementById("median");
-const modeText = document.getElementById("mode");
-const rangeText = document.getElementById("range");
-const varianceText = document.getElementById("variance");
-const SDText = document.getElementById("standardDeviation");
+const getMean = (array) =>
+  array.reduce((acc, el) => acc + el, 0) / array.length;
 
-const calculate = (event) => {
-  event.preventDefault();
-  const numbers = inputNumbers.value.split(",").map((number) => Number(number));
-  if (numbers == "NaN") {
-    window.alert("Please enter a valid number");
-  } else {
-    meanText.innerText = Mean(numbers);
-    medianText.innerText = Median(numbers);
-    modeText.innerText = Mode(numbers);
-    rangeText.innerText = rangeOfNumbers(numbers);
-    varianceText.innerText = Variance(numbers);
-    SDText.innerText = standardDeviation(numbers);
-  }
+const getMedian = (array) => {
+  const sorted = array.toSorted((a, b) => a - b);
+  const median =
+    sorted.length % 2 === 0
+      ? getMean(sorted[sorted.length / 2], sorted[sorted.length / 2 - 1])
+      : sorted[Math.floor(sorted.length / 2)];
+  return median;
 };
 
-function Mean(numbers) {
-  let sum = 0;
-  for (let i = 0; i < numbers.length; i++) {
-    sum += numbers[i];
+const getMode = (array) => {
+  const counts = {};
+  array.forEach((el) => {
+    counts[el] = (counts[el] || 0) + 1;
+  });
+
+  if (new Set(Object.values(counts)).size === 1) {
+    return null;
   }
-  const meanValue = sum / numbers.length;
-  return meanValue;
-}
 
-function bubbleSort(numbers = []) {
-  for (let i = 0; i < numbers.length; i++) {
-    for (let j = 0; j < numbers.length - 1; j++) {
-      if (numbers[j] > numbers[j + 1]) {
-        const temp = numbers[j];
-        numbers[j] = numbers[j + 1];
-        numbers[j + 1] = temp;
-      }
-    }
-  }
-  return numbers;
-}
+  const highest = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+  const mode = Object.keys(counts).filter(
+    (el) => counts[el] === counts[highest]
+  );
+  return mode.join(",");
+};
 
-function Median(numbers) {
-  bubbleSort(numbers);
-  if(numbers.length % 2 == 0){
-    return `${numbers[numbers.length / 2 - 1]},${numbers[numbers.length / 2]}`
-  }else{
-    return numbers[(numbers.length - 1) / 2];
-  }
-}
+const getRange = (array) => {
+  return Math.max(...array) - Math.min(...array);
+};
 
-function Mode(numbers) {
-  const count = {};
-  let maxCount = 0;
-  let mostFrequency = null;
+const getVariance = (array) => {
+  const mean = getMean(array);
+  const variance =
+    array.reduce((acc, el) => {
+      const difference = el - mean;
+      const squared = difference ** 2;
+      return acc + squared;
+    }, 0) / array.length;
+  return variance;
+};
 
-  for (const num of numbers) {
-    count[num] = (count[num] || 0) + 1;
-    if (count[num] > maxCount) {
-      maxCount = count[num];
-      mostFrequency = num;
-    }
-  }
-  return mostFrequency;
-}
+const getStandardDeviation = (array) => {
+  const variance = getVariance(array);
+  const standardDeviation = Math.sqrt(variance);
+  return standardDeviation;
+};
 
-function rangeOfNumbers(numbers) {
-  const array = bubbleSort(numbers);
-  const largestNumber = array[array.length - 1];
-  const smallestNumber = array[0];
-  return largestNumber - smallestNumber;
-}
+const calculate = () => {
+  const value = document.querySelector("#numbers").value;
+  const array = value.split(/,\s*/g);
+  const numbers = array.map((el) => Number(el)).filter((el) => !isNaN(el));
 
-function Variance(numbers) {
-  const array = [];
-  for (const num of numbers) {
-    const squareDifference = Math.pow(num - Mean(numbers), 2);
-    array.push(squareDifference);
-  }
-  return Mean(array);
-}
+  const mean = getMean(numbers);
+  const median = getMedian(numbers);
+  const mode = getMode(numbers);
+  const range = getRange(numbers);
+  const variance = getVariance(numbers);
+  const standardDeviation = getStandardDeviation(numbers);
 
-function standardDeviation(numbers) {
-  return Math.sqrt(Variance(numbers)).toFixed(2);
-}
-btnSubmit.addEventListener("click", calculate);
+  document.querySelector("#mean").textContent = mean;
+  document.querySelector("#median").textContent = median;
+  document.querySelector("#mode").textContent = mode;
+  document.querySelector("#range").textContent = range;
+  document.querySelector("#variance").textContent = variance;
+  document.querySelector("#standardDeviation").textContent = standardDeviation;
+};
